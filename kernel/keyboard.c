@@ -16,7 +16,7 @@
 #include "keyboard.h"
 #include "keymap.h"
 
-PRIVATE KB_INPUT	kb_in;         /*全局变量初始化键盘的数据结构*/
+PRIVATE KB_INPUT	kb_in;
 
 PRIVATE	int	code_with_E0;
 PRIVATE	int	shift_l;	/* l shift state */
@@ -28,7 +28,6 @@ PRIVATE	int	ctrl_r;		/* l ctrl state	 */
 PRIVATE	int	caps_lock;	/* Caps Lock	 */
 PRIVATE	int	num_lock;	/* Num Lock	 */
 PRIVATE	int	scroll_lock;	/* Scroll Lock	 */
-PRIVATE	int	tab;		/* tab		 */
 PRIVATE	int	column;
 
 PRIVATE int	caps_lock;	/* Caps Lock	 */
@@ -69,13 +68,11 @@ PUBLIC void init_keyboard()
 	shift_l	= shift_r = 0;
 	alt_l	= alt_r   = 0;
 	ctrl_l	= ctrl_r  = 0;
-	tab = 0;
 
 	caps_lock   = 0;
 	num_lock    = 1;
 	scroll_lock = 0;
 
-	f1=f2=f3=f4=f5=0;
 	set_leds();
 
         put_irq_handler(KEYBOARD_IRQ, keyboard_handler);/*设定键盘中断处理程序*/
@@ -188,9 +185,6 @@ PUBLIC void keyboard_read(TTY* p_tty)
 			case ALT_R:
 				alt_l = make;
 				break;
-			case TAB:
-				tab = make;
-				break;
 			case CAPS_LOCK:
 				if (make) {
 					caps_lock   = !caps_lock;
@@ -282,31 +276,6 @@ PUBLIC void keyboard_read(TTY* p_tty)
 							}
 						}
 						break;
-					}
-				}
-
-				if(tab == 1 && (shift_l == 1 || shift_r == 1)){
-					switch(key){
-					case 'Q':
-						key = 'W';
-						break;
-					case 'A':
-						key = 'S';
-						break;
-					case 'Z':
-						key = 'X';
-						break;
-					case 'W':
-						key = 'E';
-						break;
-					case 'S':
-						key = 'D';
-						break;
-					case 'X':
-						key = 'C';
-						break;
-					default:
-						return;
 					}
 				}
 

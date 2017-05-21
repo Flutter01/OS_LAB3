@@ -14,15 +14,14 @@
 #include "console.h"
 #include "global.h"
 #include "proto.h"
-#define TTY_FIRST	(tty_table)
-#define TTY_END		(tty_table + NR_CONSOLES)
+
 
 /*======================================================================*
                             kernel_main
  *======================================================================*/
 PUBLIC int kernel_main()
 {
-	disp_str("-----\"welcome!!!\"-----\n");
+	disp_str("-----\"kernel_main\" begins-----\n");
 
 	TASK*		p_task		= task_table;
 	PROCESS*	p_proc		= proc_table;
@@ -66,6 +65,7 @@ PUBLIC int kernel_main()
 
 	proc_table[0].ticks = proc_table[0].priority = 15;
 	proc_table[1].ticks = proc_table[1].priority =  5;
+	proc_table[2].ticks = proc_table[2].priority =  3;
 
 	k_reenter = 0;
 	ticks = 0;
@@ -73,7 +73,7 @@ PUBLIC int kernel_main()
 	p_proc_ready	= proc_table;
 
 	init_clock();
-    init_keyboard();
+        init_keyboard();
 
 	restart();
 
@@ -87,11 +87,8 @@ void TestA()
 {
 	int i = 0;
 	while (1) {
-		TTY*	p_tty;
-		for (p_tty=TTY_FIRST;p_tty<TTY_END;p_tty++) {
-			clean_screen(p_tty->p_console);
-		}
-		milli_delay(120000);
+		/* disp_str("A."); */
+		milli_delay(10);
 	}
 }
 
@@ -108,7 +105,7 @@ void TestB()
 }
 
 /*======================================================================*
-                               TestC
+                               TestB
  *======================================================================*/
 void TestC()
 {

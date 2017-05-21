@@ -22,8 +22,6 @@
 #include "keyboard.h"
 #include "proto.h"
 
-PRIVATE int H_cursor[80*15];
-PRIVATE int cur_index = -1;
 PRIVATE void set_cursor(unsigned int position);
 PRIVATE void set_video_start_addr(u32 addr);
 PRIVATE void flush(CONSOLE* p_con);
@@ -75,12 +73,11 @@ PUBLIC int is_current_console(CONSOLE* p_con)
 PUBLIC void out_char(CONSOLE* p_con, char ch)
 {
 	u8* p_vmem = (u8*)(V_MEM_BASE + p_con->cursor * 2);
+
 	switch(ch) {
 	case '\n':
 		if (p_con->cursor < p_con->original_addr +
 		    p_con->v_mem_limit - SCREEN_WIDTH) {
-			cur_index++;
-			H_cursor[cur_index] = p_con->cursor;
 			p_con->cursor = p_con->original_addr + SCREEN_WIDTH * 
 				((p_con->cursor - p_con->original_addr) /
 				 SCREEN_WIDTH + 1);
@@ -88,45 +85,16 @@ PUBLIC void out_char(CONSOLE* p_con, char ch)
 		break;
 	case '\b':
 		if (p_con->cursor > p_con->original_addr) {
-			if(cur_index >= 0){
-				p_con->cursor = H_cursor[cur_index];
-				cur_index--;
-			}
+			p_con->cursor--;
 			*(p_vmem-2) = ' ';
 			*(p_vmem-1) = DEFAULT_CHAR_COLOR;
-		}
-		break;
-	case '\t':
-		if (p_con->cursor <
-		    p_con->original_addr + p_con->v_mem_limit - 1){
-			int i=0;
-			cur_index++;
-			H_cursor[cur_index] = p_con->cursor;
-			for (i=0;i<4;i++){
-				*p_vmem++=' ';
-				*p_vmem++=DEFAULT_CHAR_COLOR;
-				p_con->cursor++;
-			}
 		}
 		break;
 	default:
 		if (p_con->cursor <
 		    p_con->original_addr + p_con->v_mem_limit - 1) {
-			cur_index++;
-			H_cursor[cur_index] = p_con->cursor;
 			*p_vmem++ = ch;
-			if (f1){
-				*p_vmem++ = RED;
-			}else if(f2){
-				*p_vmem++ = BLUE;
-			}else if(f3){
-				*p_vmem++ = PURPLE;
-			}else if(f4){
-				*p_vmem++ = GREEN;
-			}else if(f5){
-				*p_vmem++ = WHITE;
-			}
-			
+			*p_vmem++ = DEFAULT_CHAR_COLOR;
 			p_con->cursor++;
 		}
 		break;
@@ -219,21 +187,5 @@ PUBLIC void scroll_screen(CONSOLE* p_con, int direction)
 
 	set_video_start_addr(p_con->current_start_addr);
 	set_cursor(p_con->cursor);
-}
-
-/*======================================================================*
-			   clean screen
- *======================================================================*/
-
-PUBLIC void clean_screen(CONSOLE* p_con){
-	u8* p_vmem = (u8*)(V_MEM_BASE + p_con->cursor * 2);
-	while (p_con->cursor > p_con->original_addr) {
-			p_con->cursor--;
-			*(p_vmem-2) = ' ';
-			*(p_vmem-1) = DEFAULT_CHAR_COLOR;
-			p_vmem = (u8*)(V_MEM_BASE + p_con->cursor * 2);
-	}
-	set_cursor(p_con->cursor);
-	cur_index = -1;
 }
 

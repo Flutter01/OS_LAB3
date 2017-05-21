@@ -75,40 +75,22 @@ PUBLIC void in_process(TTY* p_tty, u32 key)
                 case BACKSPACE:
 			put_key(p_tty, '\b');
 			break;
-				case TAB:
-					put_key(p_tty,'\t');
-					break;
                 case UP:
                         if ((key & FLAG_SHIFT_L) || (key & FLAG_SHIFT_R)) {
-							scroll_screen(p_tty->p_console, SCR_DN);
+				scroll_screen(p_tty->p_console, SCR_DN);
                         }
-						break;
+			break;
 		case DOWN:
 			if ((key & FLAG_SHIFT_L) || (key & FLAG_SHIFT_R)) {
 				scroll_screen(p_tty->p_console, SCR_UP);
 			}
 			break;
 		case F1:
-			f1=1;
-			f2=f3=f4=f5=0;
-			break;
 		case F2:
-			f2=1;
-			f1=f3=f4=f5=0;
-			break;
 		case F3:
-			f3=1;
-			f2=f1=f4=f5=0;
-			break;
 		case F4:
-			f4=1;
-			f2=f1=f3=f5=0;
-			break;
 		case F5:
-			f5=1;
-			f2=f1=f3=f4=0;
-			break;
-		case F6:clean_screen(p_tty->p_console);break;
+		case F6:
 		case F7:
 		case F8:
 		case F9:

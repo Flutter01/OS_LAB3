@@ -29,11 +29,6 @@
 #define BLUE    0x1     /* 0001 */
 #define FLASH   0x80    /* 1000 0000 */
 #define BRIGHT  0x08    /* 0000 1000 */
-#define CYAN	0x3
-#define BROWN	0x6
-#define PURPLE	0x5
-#define GRAY	0x8
-#define LIGHT_BLUE	0x9
 #define MAKE_COLOR(x,y) (x | y) /* MAKE_COLOR(Background,Foreground) */
 
 /* GDT 和 IDT 中描述符的个数 */
@@ -65,7 +60,7 @@
 			     * Counter0 - LSB then MSB - rate generator - binary
 			     */
 #define TIMER_FREQ     1193182L/* clock frequency for timer in PC and AT */
-#define HZ             10000  /* clock freq (software settable on IBM-PC) */
+#define HZ             100  /* clock freq (software settable on IBM-PC) */
 
 /* AT keyboard */
 /* 8042 ports */
