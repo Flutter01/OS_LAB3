@@ -15,7 +15,10 @@
 #include "global.h"
 #include "proto.h"
 
-
+int to_clear = 0;
+int input_mode = 0;
+int mode_length = 0;
+int enterTag =0;
 /*======================================================================*
                             kernel_main
  *======================================================================*/
@@ -73,6 +76,9 @@ PUBLIC int kernel_main()
 	p_proc_ready	= proc_table;
 
 	init_clock();
+	input_mode = 0;
+	mode_length = 0;
+	enterTag =0;
         init_keyboard();
 
 	restart();
@@ -87,8 +93,8 @@ void TestA()
 {
 	int i = 0;
 	while (1) {
-		/* disp_str("A."); */
-		milli_delay(10);
+		to_clear = 1;
+		milli_delay(200000);
 	}
 }
 
@@ -99,7 +105,7 @@ void TestB()
 {
 	int i = 0x1000;
 	while(1){
-		/* disp_str("B."); */
+		//disp_str("B.");
 		milli_delay(10);
 	}
 }

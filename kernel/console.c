@@ -26,11 +26,33 @@ PRIVATE void set_cursor(unsigned int position);
 PRIVATE void set_video_start_addr(u32 addr);
 PRIVATE void flush(CONSOLE* p_con);
 
+extern unsigned int tabs[100];
+extern int tabs_len;//已经键入的tab空格键数目
+extern unsigned int tabSpace[100];
+extern int input_mode;//当input_mode为0时，代表未进入查询模式，为1时进入
+extern int mode_length;//查询模式中键入的字符数
+extern int isTab;//判断是否为tab键
+extern int backspace_len;
+extern unsigned int backspace[100];
+extern unsigned int backspace_loc[100];
+extern int space_num;
+
+/*======================================================================*
+			   clear_screen
+ *======================================================================*/
+PUBLIC void clear_screen(CONSOLE * p_con)
+{
+ while (p_con -> cursor != 1 && input_mode == 0)
+ {
+   out_char(p_con,'\b');
+ }
+}
 /*======================================================================*
 			   init_screen
  *======================================================================*/
 PUBLIC void init_screen(TTY* p_tty)
 {
+	
 	int nr_tty = p_tty - tty_table;
 	p_tty->p_console = console_table + nr_tty;
 
@@ -75,26 +97,66 @@ PUBLIC void out_char(CONSOLE* p_con, char ch)
 	u8* p_vmem = (u8*)(V_MEM_BASE + p_con->cursor * 2);
 
 	switch(ch) {
+	case ' ':	
+			if (p_con->cursor <
+		    	p_con->original_addr + p_con->v_mem_limit - 1) {
+				char ch_color =  DEFAULT_CHAR_COLOR;
+				switch(input_mode) {
+					case 0:ch_color = DEFAULT_CHAR_COLOR;break;
+					case 1:ch_color = MAKE_COLOR(BLACK, RED);mode_length++;break;
+				}
+				*p_vmem++ = ch;
+				*p_vmem++ = ch_color;
+				p_con->cursor++;
+                   //      if(isTab==1&&p_con->cursor%SCREEN_WIDTH==1){
+                   //     p_con->cursor+=4;
+                  //      tabSpace[tabs_len-1]=space_num+4;
+                  //   }
+			}
+		break;
 	case '\n':
 		if (p_con->cursor < p_con->original_addr +
 		    p_con->v_mem_limit - SCREEN_WIDTH) {
+                   unsigned int temp=p_con->cursor;
 			p_con->cursor = p_con->original_addr + SCREEN_WIDTH * 
 				((p_con->cursor - p_con->original_addr) /
 				 SCREEN_WIDTH + 1);
-		}
+		
+                backspace_loc[backspace_len]=p_con->cursor;
+                backspace[backspace_len]=p_con->cursor-temp;
+                backspace_len++;
+                }
 		break;
 	case '\b':
 		if (p_con->cursor > p_con->original_addr) {
-			p_con->cursor--;
-			*(p_vmem-2) = ' ';
-			*(p_vmem-1) = DEFAULT_CHAR_COLOR;
+            if (tabs_len > 0 && p_con->cursor == tabs[tabs_len - 1]+tabSpace[tabs_len - 1]) {
+                p_con->cursor -= tabSpace[tabs_len - 1];
+                tabs_len--;
+            }
+           else if (backspace_len>0&&p_con->cursor==backspace_loc[backspace_len-1]){
+             p_con->cursor-=backspace[backspace_len-1];
+               backspace_len--;
+        //p_vmem = (u8*)(V_MEM_BASE + p_con->cursor * 2);
+               }
+           else {
+                p_con->cursor--;
+                *(p_vmem-2) = ' ';
+	            *(p_vmem-1) = DEFAULT_CHAR_COLOR;
+                p_vmem = (u8*)(V_MEM_BASE + p_con->cursor * 2);
+ 
+            }
 		}
 		break;
 	default:
 		if (p_con->cursor <
 		    p_con->original_addr + p_con->v_mem_limit - 1) {
+			char ch_color =  DEFAULT_CHAR_COLOR;
+			switch(input_mode) {
+				case 0:ch_color = DEFAULT_CHAR_COLOR;break;
+				case 1:ch_color = MAKE_COLOR(BLACK, RED);mode_length++;break;
+			}
 			*p_vmem++ = ch;
-			*p_vmem++ = DEFAULT_CHAR_COLOR;
+			*p_vmem++ = ch_color;
 			p_con->cursor++;
 		}
 		break;
@@ -189,3 +251,45 @@ PUBLIC void scroll_screen(CONSOLE* p_con, int direction)
 	set_cursor(p_con->cursor);
 }
 
+/*======================================================================*
+			   find_string
+ *======================================================================*/
+PUBLIC void find_string(CONSOLE* p_con) {//查询模式中搜索相同字符
+	u8* p_vmem = (u8*)(V_MEM_BASE + (p_con->cursor - mode_length) * 2);//显存基址，加上光标位置减去输入搜索关键字的长度，得到文本最后内容的位置，每个字两字节
+	char find_dtr[mode_length];
+	int i = 0;
+	for (i = 0; i < mode_length; i++) {
+		find_dtr[i] = *p_vmem++;
+		p_vmem++;
+	}
+	p_vmem = (u8*)(V_MEM_BASE + (p_con->cursor - mode_length) * 2);
+	u8* p_vmemstart = (u8*)(V_MEM_BASE);
+	u8* index = p_vmemstart;
+	int true = 0;
+	for (; index < p_vmem; index++) {
+		char temp = *index++;
+		if(temp == find_dtr[true]){
+			true++;
+			if(true == mode_length) {
+				//color
+				int j = 0;
+				for (; j < mode_length; j++) {
+					*(index-(j*2)) = MAKE_COLOR(BLACK,BLUE);//倒序改变相同字符的颜色
+				}
+				true = 0;
+			}
+		}else{
+			true = 0;
+		}
+	}
+}
+/*======================================================================*
+			   find_string
+ *======================================================================*/
+ PUBLIC void cleanColor(CONSOLE* p_con){
+ 	u8* p_vmemstart = (u8*)(V_MEM_BASE);
+ 	u8* p_vmem = (u8*)(V_MEM_BASE + (p_con->cursor - mode_length) * 2);
+ 	for(p_vmemstart++; p_vmemstart <= p_vmem; p_vmemstart++) {
+ 		*(p_vmemstart++) = MAKE_COLOR(BLACK,WHITE);
+ 	}
+ }
